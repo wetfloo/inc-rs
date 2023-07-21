@@ -1,3 +1,7 @@
+mod dynamic;
+mod prerequisite;
+mod stat;
+
 fn main() {
-    println!("Implement me!");
+    // look at the different modules for implementations
 }
