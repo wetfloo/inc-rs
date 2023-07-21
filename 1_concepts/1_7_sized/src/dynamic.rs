@@ -1,6 +1,4 @@
-use std::marker::PhantomData;
-
-use crate::prerequisite::{Storage, User};
+use crate::prerequisite::{Storage, UserRepository};
 
 struct UserRepositoryImpl<K, V> {
     storage: Box<dyn Storage<K, V>>,
@@ -10,16 +8,18 @@ impl<K, V> UserRepositoryImpl<K, V> {
     pub fn new(storage: Box<dyn Storage<K, V>>) -> Self {
         Self { storage }
     }
+}
 
-    pub fn set(&mut self, key: K, val: V) {
+impl<K, V> UserRepository<K, V> for UserRepositoryImpl<K, V> {
+    fn set(&mut self, key: K, val: V) {
         self.storage.set(key, val);
     }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
+    fn get(&self, key: &K) -> Option<&V> {
         self.storage.get(key)
     }
 
-    pub fn remove(&mut self, key: &K) -> Option<V> {
+    fn remove(&mut self, key: &K) -> Option<V> {
         self.storage.remove(key)
     }
 }

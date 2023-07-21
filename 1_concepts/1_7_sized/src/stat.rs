@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::prerequisite::{Storage, UserRepository};
 
-struct UserRepositoryImpl<K, V, S: Storage<K, V>> {
+struct UserRepositoryImpl<K, V, S> {
     storage: S,
     phantom: PhantomData<(K, V)>,
 }
