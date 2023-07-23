@@ -1,16 +1,19 @@
-use std::net::{IpAddr, SocketAddr};
+use http::status::StatusCode;
+use std::net::SocketAddr;
 
 fn main() {
-    println!("Refactor me!");
-
-    let mut err = Error::new("NO_USER".to_string());
-    err.status(404).message("User not found".to_string());
+    let err = ErrorBuilder::new()
+        .code("NO_USER")
+        .status(404.try_into().unwrap())
+        .message("User not found")
+        .build();
+    dbg!(&err);
 }
 
 #[derive(Debug)]
 pub struct Error {
     code: String,
-    status: u16,
+    status: StatusCode,
     message: String,
 }
 
@@ -19,26 +22,36 @@ impl Default for Error {
     fn default() -> Self {
         Self {
             code: "UNKNOWN".to_string(),
-            status: 500,
+            status: 500.try_into().unwrap(),
             message: "Unknown error has happened.".to_string(),
         }
     }
 }
 
-impl Error {
-    pub fn new(code: String) -> Self {
-        let mut err = Self::default();
-        err.code = code;
-        err
+pub struct ErrorBuilder(Error);
+
+impl ErrorBuilder {
+    pub fn new() -> Self {
+        let error = Error::default();
+        Self(error)
     }
 
-    pub fn status(&mut self, s: u16) -> &mut Self {
-        self.status = s;
+    pub fn build(self) -> Error {
+        self.0
+    }
+
+    pub fn code<S: Into<String>>(mut self, code: S) -> Self {
+        self.0.code = code.into();
         self
     }
 
-    pub fn message(&mut self, m: String) -> &mut Self {
-        self.message = m;
+    pub fn status(mut self, status: StatusCode) -> Self {
+        self.0.status = status;
+        self
+    }
+
+    pub fn message<S: Into<String>>(mut self, message: S) -> Self {
+        self.0.message = message.into();
         self
     }
 }
@@ -47,8 +60,8 @@ impl Error {
 pub struct Server(Option<SocketAddr>);
 
 impl Server {
-    pub fn bind(&mut self, ip: IpAddr, port: u16) {
-        self.0 = Some(SocketAddr::new(ip, port))
+    pub fn bind<A: Into<SocketAddr>>(&mut self, addr: A) {
+        self.0 = Some(addr.into());
     }
 }
 
@@ -57,7 +70,7 @@ mod server_spec {
     use super::*;
 
     mod bind {
-        use std::net::Ipv4Addr;
+        use std::net::{IpAddr, Ipv4Addr};
 
         use super::*;
 
@@ -65,10 +78,12 @@ mod server_spec {
         fn sets_provided_address_to_server() {
             let mut server = Server::default();
 
-            server.bind(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+            let socket_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+            server.bind(socket_addr);
             assert_eq!(format!("{}", server.0.unwrap()), "127.0.0.1:8080");
 
-            server.bind("::1".parse().unwrap(), 9911);
+            let socket_addr = SocketAddr::new("::1".parse::<IpAddr>().unwrap(), 9911);
+            server.bind(socket_addr);
             assert_eq!(format!("{}", server.0.unwrap()), "[::1]:9911");
         }
     }
