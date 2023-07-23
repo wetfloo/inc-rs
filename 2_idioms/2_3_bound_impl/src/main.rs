@@ -4,7 +4,9 @@ use std::{
 };
 
 fn main() {
-    println!("Refactor me!");
+    println!(
+        "I don't like derives that aren't used. But I get that they're valuable in libraries."
+    );
 }
 
 /// A projected state built from a series of events.
@@ -45,6 +47,8 @@ pub trait AggregateEvent<A: Aggregate>: Event {
 }
 
 /// Represents an event sequence number, starting at 1
+// Since this struct is non-generic, there are no trait bounds to worry about.
+// Therefore, it should be fine to derive a lot
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct EventNumber(NonZeroU64);
 
@@ -59,11 +63,15 @@ impl EventNumber {
     /// Increments the event number to the next value.
     #[inline]
     pub fn incr(&mut self) {
-        self.0 = NonZeroU64::new(self.0.get() + 1).unwrap();
+        // This is a pre 1.64.0 way.
+        // self.0 = NonZeroU64::new(self.0.get() + 1).unwrap();
+        self.0.checked_add(1).unwrap();
     }
 }
 
 /// An aggregate version.
+// Since this enum is non-generic, there are no trait bounds to worry about.
+// Therefore, it should be fine to derive a lot
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Version {
     /// The version of an aggregate that has not had any events applied to it.
@@ -82,7 +90,8 @@ impl Default for Version {
 impl Version {
     /// Creates a new `Version` from a number.
     ///
-    /// The number `0` gets interpreted as being `Version::Initial`, while any other number is interpreted as the
+    /// The number `0` gets interpreted as being `Version::Initial`,
+    /// while any other number is interpreted as the
     /// latest event number applied.
     #[inline]
     pub fn new(number: u64) -> Self {
@@ -102,8 +111,9 @@ impl Version {
     }
 }
 
-/// An aggregate that has been loaded from a source, which keeps track of the version of its last snapshot and the current version of the aggregate.
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
+/// An aggregate that has been loaded from a source,
+/// which keeps track of the version of its last snapshot
+/// and the current version of the aggregate.
 pub struct HydratedAggregate<A>
 where
     A: Aggregate,
@@ -170,7 +180,6 @@ where
 }
 
 /// An identified, specific instance of a hydrated aggregate.
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
 pub struct Entity<I, A>
 where
     A: Aggregate,
