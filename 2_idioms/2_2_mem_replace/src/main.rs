@@ -1,3 +1,5 @@
+use std::mem;
+
 fn main() {
     let mut s = Solver {
         expected: Trinity { a: 1, b: 2, c: 3 },
@@ -12,21 +14,34 @@ fn main() {
     println!("{:?}", s)
 }
 
-#[derive(Clone, Debug, PartialEq)]
+// Default derive allows us to take values from a Vec
+#[derive(Clone, Debug, PartialEq, Default)]
 struct Trinity<T> {
     a: T,
     b: T,
     c: T,
 }
 
-impl<T: Clone> Trinity<T> {
+impl<T> Trinity<T> {
     fn rotate(&mut self) {
-        let a = self.a.clone();
-        let b = self.b.clone();
-        let c = self.c.clone();
-        self.a = b;
-        self.b = c;
-        self.c = a;
+        // Yay, no cloning!
+        mem::swap(&mut self.a, &mut self.b);
+        mem::swap(&mut self.a, &mut self.c);
+    }
+}
+
+impl<T: PartialEq> Trinity<T> {
+    // Rotation config could be improved by pre-validating that it's correct
+    fn try_solve(&mut self, expected: &Trinity<T>, rotate_times: u32) -> SolveResult {
+        for _ in 0..rotate_times {
+            if self == expected {
+                return SolveResult::Solved;
+            }
+            self.rotate();
+        }
+
+        // Give up after rotating enough times
+        SolveResult::Unsolved
     }
 }
 
@@ -36,18 +51,28 @@ struct Solver<T> {
     unsolved: Vec<Trinity<T>>,
 }
 
-impl<T: Clone + PartialEq> Solver<T> {
+impl<T: PartialEq> Solver<T> {
     fn resolve(&mut self) {
-        let mut unsolved = Vec::with_capacity(self.unsolved.len());
-        'l: for t in self.unsolved.iter_mut() {
-            for _ in 0..3 {
-                if *t == self.expected {
-                    continue 'l;
-                }
-                t.rotate();
+        // Don't really know ahead of time how many items will need to be here
+        let mut solved_indices: Vec<usize> = Vec::new();
+        // Find all indices that could are resolved after rotating enough times
+        for (index, trinity) in self.unsolved.iter_mut().enumerate() {
+            let solve_result = trinity.try_solve(&self.expected, 3);
+            if let SolveResult::Solved = solve_result {
+                solved_indices.push(index);
             }
-            unsolved.push(t.clone())
         }
-        self.unsolved = unsolved;
+
+        // Now that indices are ready, pop off items from the original Vec.
+        // Go backwards, because deleting from the end is better for array lists
+        for &index in solved_indices.iter().rev() {
+            self.unsolved.remove(index);
+        }
     }
+}
+
+#[derive(PartialEq, Eq)]
+enum SolveResult {
+    Solved,
+    Unsolved,
 }
