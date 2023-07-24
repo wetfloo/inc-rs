@@ -8,8 +8,18 @@ use std::fmt;
 
 use self::format::{Format, FormatWith};
 
+mod private {
+    /// Seals any trait it's applied to,
+    /// not allowing for implementations from downstream.
+    pub trait TraitSeal {}
+
+    /// When used in a method, makes that method __uncallable__ from outside of
+    /// this crate.
+    pub struct MethodSeal;
+}
+
 /// Extension trait for an [`Iterator`].
-pub trait MyIteratorExt: Iterator {
+pub trait MyIteratorExt: Iterator + private::TraitSeal {
     /// Format all iterator elements, separated by `sep`.
     ///
     /// All elements are formatted (any formatting trait)
@@ -25,7 +35,7 @@ pub trait MyIteratorExt: Iterator {
     ///     format!("{:.2}", data.iter().format(", ")),
     ///            "1.10, 2.72, -3.00");
     /// ```
-    fn format(self, sep: &str) -> Format<Self>
+    fn format(self, sep: &str, _: private::MethodSeal) -> Format<Self>
     where
         Self: Sized,
     {
@@ -61,7 +71,7 @@ pub trait MyIteratorExt: Iterator {
     /// });
     /// assert_eq!(matrix_formatter.to_string(), "1, 2, 3\n4, 5, 6");
     /// ```
-    fn format_with<F>(self, sep: &str, format: F) -> FormatWith<Self, F>
+    fn format_with<F>(self, sep: &str, format: F, _: private::MethodSeal) -> FormatWith<Self, F>
     where
         Self: Sized,
         F: FnMut(Self::Item, &mut dyn FnMut(&dyn fmt::Display) -> fmt::Result) -> fmt::Result,
@@ -70,7 +80,7 @@ pub trait MyIteratorExt: Iterator {
     }
 }
 
-impl<T> MyIteratorExt for T where T: Iterator {}
+impl<T> MyIteratorExt for T where T: Iterator + private::TraitSeal {}
 
 mod format {
     use std::{cell::RefCell, fmt};

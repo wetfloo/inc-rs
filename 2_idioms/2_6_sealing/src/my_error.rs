@@ -6,6 +6,10 @@ use std::{
     fmt::{Debug, Display},
 };
 
+mod private {
+    pub struct MethodSeal;
+}
+
 /// Basic expectations for error values.
 pub trait MyError: Debug + Display {
     /// The lower-level source of this error, if any.
@@ -67,7 +71,8 @@ pub trait MyError: Debug + Display {
     ///
     /// __This is memory-unsafe to override in user code.__
     #[doc(hidden)]
-    fn type_id(&self) -> TypeId
+    // this is how core::error::Error does this
+    fn type_id(&self, _: private::MethodSeal) -> TypeId
     where
         Self: 'static,
     {
