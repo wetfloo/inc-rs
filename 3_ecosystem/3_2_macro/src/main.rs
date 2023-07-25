@@ -1,3 +1,7 @@
+mod decl;
+use decl::btreemap;
+
+#[allow(unused)]
 fn main() {
-    println!("Implement me!");
+    let btreemap = btreemap!((1, 2), (3, 4));
 }
