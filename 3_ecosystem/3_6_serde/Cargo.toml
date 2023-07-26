@@ -3,3 +3,12 @@ name = "step_3_6"
 version = "0.1.0"
 edition = "2021"
 publish = false
+
+[dependencies]
+humantime-serde = "1.1.1"
+serde = "1.0.175"
+serde_derive = "1.0.175"
+serde_json = "1.0.103"
+serde_with = "3.1.0"
+serde_yaml = "0.9.25"
+toml = "0.7.6"
