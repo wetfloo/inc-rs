@@ -1,0 +1,18 @@
+format_string = { SOI ~ text ~ (maybe_format ~ text)* ~ EOI }
+text = // TODO
+maybe_format = { "{" "{" | "}" "}" | format }
+format = { "{" ((argument) (":" ~ format_spec))* "}" }
+argument = { integer | identifier }
+integer = { (ASCII_DIGIT)+ }
+identifier = { ASCII_ALPHABETIC }+
+WHITESPACE = _{ " " }
+
+format_spec = { ((fill)align) ~ (sign) ~ ("#") ~ ("0") ~ (width) ~ ("." precision)type }
+fill = { character }
+align = { "<" | "^" | ">" }
+sign = { "+" | "-" }
+width = { count }
+precision = { count | "*" }
+type = { "" | "?" | "x?" | "X?" | identifier }
+count = { parameter | integer }
+parameter = { argument "$" }

@@ -1,0 +1,16 @@
+WHITESPACE = _{ " " }
+COMMENT = _{ (not_valid ~ ANY)+ }
+// I have no idea why this still pops up even though it's silent
+separator = _{ "." }
+integer = { (ASCII_DIGIT)+ }
+not_valid = { !(width | precision | sign) }
+// identifier_prefix = _{ "$" }
+// identifier_name = { (ASCII_ALPHANUMERIC)+ }
+// identifier = ${ identifier_prefix ~ (identifier_name)+ }
+
+value = { SOI ~ (sign | width | precision)* ~ EOI }
+
+sign = { "-" | "+" }
+width = ${ (integer ~ &separator) }
+// precision = ${ (!separator ~ integer | "*") ~ (identifier)? }
+precision = ${ (!separator ~ (integer | "*")) }
